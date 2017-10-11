@@ -18,7 +18,6 @@ namespace Croc.DevTools.ResxToJson
 			InputFiles = new List<string>();
 			InputFolders  = new List<string>();
             OutputFormat = OutputFormat.RequireJs;
-		    FallbackCulture = "dev";
 		}
 
 		/// <summary>
@@ -49,6 +48,12 @@ namespace Croc.DevTools.ResxToJson
 		public string OutputFile { get; set; }
 
         /// <summary>
+        /// The key separator (Default: ".")
+        /// </summary>
+        public string KeySeparator { get; set; } = ".";
+
+
+        /// <summary>
         /// The output format.
         /// </summary>
         public OutputFormat OutputFormat { get; set; }
@@ -62,7 +67,7 @@ namespace Croc.DevTools.ResxToJson
         /// also be a logical fallback for specific locales such as en-US
         /// or fr-FR.
         /// </summary>
-	    public string FallbackCulture { get; set; }
+	    public string FallbackCulture { get; set; } = "en";
 
 		/// <summary>
 		/// Options for formating resources keys names.

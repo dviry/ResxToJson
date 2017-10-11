@@ -94,10 +94,8 @@ namespace Croc.DevTools.ResxToJson
 
 				logger.AddMsg(Severity.Trace, "Processing '{0}' bundle (contains {1} resx files)", bundle.BaseName,
 					bundle.Cultures.Count);
-                string dirPath = options.OutputFormat == OutputFormat.i18next 
-                    ? Path.Combine(baseDir, options.FallbackCulture)
-                    : baseDir;
-                string outputPath = Path.Combine(dirPath, baseFileName);
+
+                string outputPath = getOutputPath(options, baseDir, baseFileName, options.FallbackCulture);
 				string jsonText = stringifyJson(jsonResources.BaseResources, options);
 				writeOutput(outputPath, jsonText, options, logger);
 
@@ -105,9 +103,16 @@ namespace Croc.DevTools.ResxToJson
 				{
 					foreach (KeyValuePair<string, JObject> pair in jsonResources.LocalizedResources)
 					{
-						dirPath = Path.Combine(baseDir, pair.Key);
-						outputPath = Path.Combine(dirPath, baseFileName);
-						jsonText = stringifyJson(pair.Value, options);
+                        if (false)
+                        {
+                            //dirPath = Path.Combine(baseDir, pair.Key);
+                            //outputPath = Path.Combine(dirPath, baseFileName);
+                        }
+                        else
+                        {
+                            outputPath = getOutputPath(options, baseDir, baseFileName, pair.Key);
+                        }
+                        jsonText = stringifyJson(pair.Value, options);
 						writeOutput(outputPath, jsonText, options, logger);
 					}
 				}
@@ -115,6 +120,22 @@ namespace Croc.DevTools.ResxToJson
 
 			return logger;
 		}
+
+        private static string getOutputPath(ResxToJsonConverterOptions options, string baseDir, string baseFileName, string lang)
+        {
+            if (false)
+            {
+                string dirPath = options.OutputFormat == OutputFormat.i18next
+                    ? Path.Combine(baseDir, lang)
+                    : baseDir;
+                return Path.Combine(dirPath, baseFileName);
+            }
+            else
+            {
+                return Path.Combine(baseDir,
+                    $"{Path.GetFileNameWithoutExtension(baseFileName)}.{lang}{Path.GetExtension(baseFileName)}");
+            }
+        }
 
         private static string GetOutputFileExtension(OutputFormat format)
 	    {
@@ -206,24 +227,67 @@ namespace Croc.DevTools.ResxToJson
 
 		private static JObject convertValues(IDictionary<string, string> values, ResxToJsonConverterOptions options)
 		{
-			var json = new JObject();
+			JObject json = new JObject();
 			foreach (KeyValuePair<string, string> pair in values)
 			{
-				string fieldName = pair.Key;
-				switch (options.Casing)
-				{
-					case JsonCasing.Camel:
-						char[] chars = fieldName.ToCharArray();
-						chars[0] = Char.ToLower(chars[0]);
-						fieldName = new string(chars);
-						break;
-					case JsonCasing.Lower:
-						fieldName = fieldName.ToLowerInvariant();
-						break;
-				}
-				json[fieldName] = pair.Value;
-			}
+                if (pair.Key.Contains(options.KeySeparator))
+                {
+                    JObject curJObject = json;
+                    // hierarchy structure
+                    string[] fieldNames = pair.Key.Split(options.KeySeparator[0]);
+                    for (int i=0; i<fieldNames.Length; i++)
+                    {
+                        string fieldName = fieldNames[i];
+                        string jKey = adjustCasing(fieldName, options);
+
+                        if (i == fieldNames.Length - 1)
+                        {
+                            curJObject[jKey] = pair.Value;
+                        }
+                        else
+                        {
+                            var child = curJObject.Property(jKey);
+                            if (child == null)
+                            {
+                                JObject childObject = new JObject();
+                                JProperty childProperty = new JProperty(jKey, childObject);
+                                curJObject.Add(childProperty);
+
+                                curJObject = childObject;
+                            }
+                            else
+                            {
+                                JToken value = child.Value;
+                                if (value.Type == JTokenType.Object)
+                                {
+                                    curJObject = (JObject)value;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // flat
+                    json[adjustCasing(pair.Key, options)] = pair.Value;
+                }
+            }
+            var s = json.ToString();
 			return json;
 		}
+
+        private static string adjustCasing(string key, ResxToJsonConverterOptions options)
+        {
+            switch (options.Casing)
+            {
+                case JsonCasing.Camel:
+                    char[] chars = key.ToCharArray();
+                    chars[0] = Char.ToLower(chars[0]);
+                    return new string(chars);
+                case JsonCasing.Lower:
+                    return key.ToLowerInvariant();
+            }
+            return key;
+        }
 	}
 }
