@@ -32,6 +32,11 @@ namespace Croc.DevTools.ResxToJson
             // Restore the foreground color
             Console.ForegroundColor = c;
 
+
+#if DEBUG
+            Console.ReadLine();
+#endif
+
             // Die!
             Environment.Exit((int)code);
         }
@@ -166,8 +171,11 @@ namespace Croc.DevTools.ResxToJson
 				Console.WriteLine(item.Message);
 				Console.ForegroundColor = backupColor;
 			}
-			
-		}
+
+#if DEBUG
+            Console.ReadLine();
+#endif
+        }
 
 		static void checkOptions(ResxToJsonConverterOptions options)
 		{
