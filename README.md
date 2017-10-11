@@ -5,8 +5,58 @@ Currently the tool supports two output formats:
 * js files for loading via RequireJS-plugin i18n (see http://requirejs.org/docs/api.html#i18n)
 * json files for loading via i18next (see http://i18next.com/)
 
+# Leon's changes
 
-# OPTIONS
+Very crude changes just to get it working...
+
+## i18n filename
+Changed export structure to use {outputFile_filename}.{language_code}.{outputFile_ext} instead of splitting in multiple subfolders.
+
+## json-to-resx
+
+Added a new Cli for converting an existing i18n.json file (including multiple languages) into separate .resx files.
+
+# json-to-resx OPTIONS
+
+## input
+Default value: current directory  
+Required: no  
+Aliases: `-i`, `-input`  
+  
+Absolute or relative path to a .json file.
+
+## outputDir
+Default value: current directory  
+Required: no  
+Aliases: `-outputDir`, `-dir`  
+  
+Absolute or relative path to a directory where result *.resx files will be placed. 
+
+
+## outputFile
+Required: no  
+Aliases: `-outputFile`, `-file`
+
+Name of file to create (.resx)
+
+## force
+Value: none (it's a flag)  
+Default value: not specified
+Required: no
+Aliases: `-f`, `-force`
+
+The flag specifies then read-only files (if any) will be overwritten.
+
+
+## fallbackCulture
+Value: string  
+Default value: 'en'  
+Required: no  
+Aliases: `-fallback`, `-fallbackCulture`  
+
+When language equals fallbackCulture, no {lang_code} will be added to the {outputFile}
+
+# resx-to-json OPTIONS
 
 ## input
 Default value: current directory  
